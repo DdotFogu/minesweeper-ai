@@ -1,0 +1,14 @@
+.game-field {
+    width: fit-content;
+    height: fit-content;
+}
+
+.field-node {
+    height: 2vh;
+    
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0px;
+}

@@ -1,8 +1,9 @@
-function App() {
+import { GameDisplay } from './components/game/GameDisplay';
 
+function App() {
   return (
     <>
-    
+      <GameDisplay />
     </>
   )
 }

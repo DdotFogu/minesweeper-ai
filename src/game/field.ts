@@ -3,9 +3,11 @@ import { Vector2 } from "../utils/vector2";
 
 export class Field {
     public grid: FieldNode[][];
+    public size: Vector2;
 
     constructor(size: Vector2, mineCount: number) {
         this.grid = this.constructField(size, mineCount);
+        this.size = size;
     }
 
     flood(node: FieldNode): boolean {
@@ -99,5 +101,39 @@ export class Field {
     printField(){
         const fieldString = this.grid.map(row => row.map((node) => node.flagged ? ` 🚩 ` : node.hidden ? `[  ]` : node instanceof BombNode ? ` 💣 ` : `[ ${(node as EmptyNode).tag} ]`).join("")).join("\n \n");
         console.log(fieldString);
+    }
+
+    copy(): Field {
+        const newField = Object.create(Field.prototype) as Field;
+        const newGrid: FieldNode[][] = this.grid.map((row) =>
+            row.map((node) => {
+                let clonedNode: FieldNode;
+
+                if (node instanceof BombNode) {
+                    clonedNode = (node as BombNode).copy();
+                } else {
+                    const emptyNode = new EmptyNode(node.pos, []);
+                    emptyNode.tag = (node as EmptyNode).tag;
+                    clonedNode = emptyNode;
+                }
+
+                clonedNode.hidden = node.hidden;
+                clonedNode.flagged = node.flagged;
+                return clonedNode;
+            })
+        );
+
+        for (let y = 0; y < this.grid.length; y++) {
+            for (let x = 0; x < this.grid[y].length; x++) {
+                newGrid[y][x].neighbors = this.grid[y][x].neighbors.map(
+                    neighbor => newGrid[neighbor.pos.getY()][neighbor.pos.getX()]
+                );
+            }
+        }
+
+        newField.grid = newGrid;
+        newField.size = this.size;
+
+        return newField;
     }
 }
