@@ -10,8 +10,8 @@ export class Field {
         this.size = size;
     }
 
-    flood(node: FieldNode): boolean {
-        let success: boolean = true;
+    flood(node: FieldNode): FloodDiagnostic {
+        const diagnostic: FloodDiagnostic = {success: true, nodes: []};
 
         const visited = new Set<FieldNode>();
         const queue: FieldNode[] = [node];
@@ -23,7 +23,9 @@ export class Field {
             visited.add(current);
 
             if (current instanceof EmptyNode && current.flagged == false && current.hidden == true) {
-                success = current.reveal();
+                diagnostic.success = current.reveal();
+                diagnostic.nodes.push(current);
+                
                 if (current.tag === 0) {
                     for (const neighbor of current.neighbors) {
                         neighbor.flagged = false;
@@ -34,11 +36,12 @@ export class Field {
                     }
                 }
             } else if (current instanceof BombNode && current.flagged == false && current.hidden == true) {
-                success = current.reveal();
+                // can prolly get rid of this else and do it on the action in the gameClass
+                diagnostic.success = current.reveal();
             }
         }
 
-        return success;
+        return diagnostic;
     }
 
     getNode(pos: Vector2){
@@ -136,4 +139,9 @@ export class Field {
 
         return newField;
     }
+}
+
+export type FloodDiagnostic = {
+    success: boolean,
+    nodes: FieldNode[]
 }

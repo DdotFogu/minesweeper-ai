@@ -1,4 +1,4 @@
-import { Field } from "./field";
+import { Field, type FloodDiagnostic } from "./field";
 import { Vector2 } from "../utils/vector2";
 import { FieldNode } from "./node";
 
@@ -8,25 +8,33 @@ import { FieldNode } from "./node";
 export class Game {
     public field: Field;
     public gameState: GameState;
+    
+    private gameSettings: GameSettings;
+    private revealedNodes: FieldNode[];
 
     constructor(settings: GameSettings) {
-        this.field = new Field(settings.size, settings.mineCount);
+        this.gameSettings = settings;
+
+        this.field = new Field(this.gameSettings.size, this.gameSettings.mineCount);
         this.gameState = GameState.Ongoing;
+        this.revealedNodes = [];
     }
 
-    clone(): Game {
+    copy(): Game {
         const gameCopy = Object.create(Game.prototype) as Game;
         gameCopy.field = this.field.copy();
         gameCopy.gameState = this.gameState;
+        gameCopy.revealedNodes = [...this.revealedNodes];
+        gameCopy.gameSettings = this.gameSettings;
         return gameCopy;
     }
 
     flagNode(pos: Vector2): Game {
-        if(!this.gameRunning()) return this.clone();
+        if(!this.gameRunning()) return this.copy();
 
-        const newGame = this.clone();
+        const newGame = this.copy();
         const node: FieldNode = newGame.field.getNode(pos);
-        if (!node.hidden) return this.clone();
+        if (!node.hidden) return this.copy();
 
         node.toggleFlagged();
 
@@ -36,16 +44,19 @@ export class Game {
     }
 
     revealNode(pos: Vector2): Game {
-        if(!this.gameRunning()) return this.clone();
+        if(!this.gameRunning()) return this.copy();
 
-        const newGame = this.clone();
+        const newGame = this.copy();
         const node: FieldNode = newGame.field.getNode(pos);
-        if (node.flagged || !node.hidden) return this.clone();
+        if (node.flagged || !node.hidden) return this.copy();
 
-        const success: boolean = newGame.field.flood(node);
+        const {success, nodes}: FloodDiagnostic = newGame.field.flood(node);
+        newGame.revealedNodes.push(...nodes);
 
         if (success === false) { newGame.setGameState(GameState.Fail); }
-        else { console.log(`Revealing Node at ${pos.getX()}, ${pos.getY()}. ${success}`) }
+        else { if (newGame.isWin()) { newGame.setGameState(GameState.Win) } }
+
+        console.log(`Revealing Node at ${pos.getX()}, ${pos.getY()}. ${success}`)
 
         return newGame;
     }
@@ -60,6 +71,18 @@ export class Game {
         if (state === GameState.Fail) { console.log(`You Hit a Mine!`); }
 
         if (state === GameState.Win) { console.log(`You Won!`); }
+    }
+
+    isWin(): boolean {
+        // can prolly store these values privately so I dont have to recalculate each call
+        const nodeCount = this.gameSettings.size.getX() * this.gameSettings.size.getY()
+        const mineCount = this.gameSettings.mineCount;
+        const reqCount = nodeCount - mineCount;
+
+        console.log(this.revealedNodes.length)
+        console.log(reqCount);
+
+        return this.revealedNodes.length == reqCount;
     }
 }
 
@@ -82,7 +105,7 @@ export class GameSettings {
 }
 
 export const DifficultySettings = {
-    Easy: new GameSettings(new Vector2(9, 9), 10    ),
+    Easy: new GameSettings(new Vector2(9, 9), 10),
     Medium: new GameSettings(new Vector2(16, 16), 40),
     Hard: new GameSettings(new Vector2(24, 24), 50)
 } as const;
@@ -93,7 +116,7 @@ export function createGame(difficulty: typeof DifficultySettings[keyof typeof Di
     newGame.field.printField();
 
     const difficultyName = Object.keys(DifficultySettings).find(key => DifficultySettings[key as keyof typeof DifficultySettings] === difficulty) || 'Unknown';
-    console.log(`Created a New Game of ${difficultyName} Difficulty\nSize: ${difficulty.size.getX()}, ${difficulty.size.getY()}\nMines: ${difficulty.mineCount}`);
+    console.log(`Created a New Game of ${difficultyName} Difficulty\nSize: ${difficulty.size.getX()}, ${difficulty.size.getY()}\nMines: ${difficulty.mineCount}\nCount: ${difficulty.size.getX()*difficulty.size.getY()}`);
 
     return newGame;
 }

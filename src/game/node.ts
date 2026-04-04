@@ -31,6 +31,15 @@ export class FieldNode {
         this.flagged = false;
     }
 
+    copy(): FieldNode{
+        const newBomb = Object.create(FieldNode.prototype) as FieldNode;
+        newBomb.pos = this.pos;
+        newBomb.neighbors = this.neighbors;
+        newBomb.hidden = this.hidden;
+        newBomb.flagged = this.flagged;
+        return newBomb;
+    }
+
     reveal(): boolean{
         this.hidden = false;
 
@@ -61,13 +70,13 @@ export class BombNode extends FieldNode {
         this.tripped = false;
     };
 
-    copy(): BombNode{
+    copy(): BombNode {
         const newBomb = Object.create(BombNode.prototype) as BombNode;
-        newBomb.tripped = this.tripped;
         newBomb.pos = this.pos;
         newBomb.neighbors = this.neighbors;
         newBomb.hidden = this.hidden;
         newBomb.flagged = this.flagged;
+        newBomb.tripped = this.tripped;
         return newBomb;
     }
 
@@ -101,6 +110,16 @@ export class EmptyNode extends FieldNode {
         
         this.tag = 0;
     };
+
+    copy(): EmptyNode {
+        const newBomb = Object.create(EmptyNode.prototype) as EmptyNode;
+        newBomb.pos = this.pos;
+        newBomb.neighbors = this.neighbors;
+        newBomb.hidden = this.hidden;
+        newBomb.flagged = this.flagged;
+        newBomb.tag = this.tag;
+        return newBomb;
+    }
 
     reveal(): boolean{
         super.reveal();
