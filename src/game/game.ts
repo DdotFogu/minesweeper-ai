@@ -3,7 +3,6 @@ import { Vector2 } from "../utils/vector2";
 import { FieldNode } from "./node";
 
 // some improvements can be made
-// Add win cond check
 
 export class Game {
     public field: Field;
@@ -79,9 +78,6 @@ export class Game {
         const mineCount = this.gameSettings.mineCount;
         const reqCount = nodeCount - mineCount;
 
-        console.log(this.revealedNodes.length)
-        console.log(reqCount);
-
         return this.revealedNodes.length == reqCount;
     }
 }
@@ -110,7 +106,9 @@ export const DifficultySettings = {
     Hard: new GameSettings(new Vector2(24, 24), 50)
 } as const;
 
-export function createGame(difficulty: typeof DifficultySettings[keyof typeof DifficultySettings] = DifficultySettings.Easy): Game {
+export type Diffculty = (typeof DifficultySettings)[keyof typeof DifficultySettings];
+
+export function createGame(difficulty: Diffculty = DifficultySettings.Easy): Game {
     const newGame = new Game(difficulty);
 
     newGame.field.printField();

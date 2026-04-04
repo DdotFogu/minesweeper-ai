@@ -1,6 +1,6 @@
 import "../../style/gamedisplay.css";
 import { useState } from 'react';
-import { Game, createGame, DifficultySettings } from "../../game/game.ts";
+import { Game, createGame, DifficultySettings, type Diffculty } from "../../game/game.ts";
 import { NodeDisplay } from "./NodeDisplay";
 import { Vector2 } from "../../utils/vector2.ts";
 
@@ -10,8 +10,26 @@ export const GameDisplay = () => {
     const handleNodeClick = (pos: Vector2) => setGame(prevGame => prevGame.revealNode(pos));
     const handleNodeFlag = (pos: Vector2) => setGame(prevGame => prevGame.flagNode(pos));
 
+    const handleDiffcultyClick = (diffculty: Diffculty) => setGame(createGame(diffculty));
+
     return(
-        <>
+        <>  
+            <div 
+                className="diffculty-selection"
+            >
+                <button
+                    onClick={() => handleDiffcultyClick(DifficultySettings.Easy)}
+                >Easy</button>
+
+                <button
+                    onClick={() => handleDiffcultyClick(DifficultySettings.Medium)}
+                >Medium</button>
+
+                <button
+                    onClick={() => handleDiffcultyClick(DifficultySettings.Hard)}
+                >Hard</button>
+            </div>
+
             <div 
                 className="game-field"
                 style={{

@@ -3,6 +3,26 @@
     height: fit-content;
 }
 
+.diffculty-selection {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.diffculty-selection button {
+    color: blue;
+    text-decoration: underline;
+
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0px;
+}
+
+.diffculty-selection button:active { color: red; }
+
 .field-node {
     height: 2vh;
     
