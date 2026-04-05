@@ -50,6 +50,7 @@ export const NodeDisplay = ({node, handleClick, handleFlag}: Props) => {
                 handleFlag(node.pos);
             }}
             src={url}
+            draggable="false"
         />
     );
 }

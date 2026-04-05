@@ -80,6 +80,10 @@ export class Game {
 
         return this.revealedNodes.length == reqCount;
     }
+
+    getSettings(): GameSettings {
+        return this.gameSettings;
+    }
 }
 
 export const GameState = {
@@ -100,6 +104,7 @@ export class GameSettings {
     }
 }
 
+// Add a check when the minecount is larger than the acutal size so it doesnt crashes
 export const DifficultySettings = {
     Easy: new GameSettings(new Vector2(9, 9), 10),
     Medium: new GameSettings(new Vector2(16, 16), 40),

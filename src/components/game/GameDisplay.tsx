@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Game, createGame, DifficultySettings, type Diffculty } from "../../game/game.ts";
 import { NodeDisplay } from "./NodeDisplay";
 import { Vector2 } from "../../utils/vector2.ts";
+import { StateDisplay } from "./StateDisplay";
 
 export const GameDisplay = () => {
     const [game, setGame] = useState<Game>(createGame(DifficultySettings.Easy));
@@ -11,6 +12,8 @@ export const GameDisplay = () => {
     const handleNodeFlag = (pos: Vector2) => setGame(prevGame => prevGame.flagNode(pos));
 
     const handleDiffcultyClick = (diffculty: Diffculty) => setGame(createGame(diffculty));
+
+    const handleStateClick = () => setGame(createGame(game.getSettings()));
 
     return(
         <>  
@@ -29,6 +32,11 @@ export const GameDisplay = () => {
                     onClick={() => handleDiffcultyClick(DifficultySettings.Hard)}
                 >Hard</button>
             </div>
+
+            <StateDisplay 
+                state={game.gameState}
+                handleClick={handleStateClick}
+            />
 
             <div 
                 className="game-field"
