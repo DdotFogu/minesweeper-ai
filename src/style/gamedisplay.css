@@ -24,11 +24,25 @@
 .diffculty-selection button:active { color: red; }
 
 .field-node {
-    height: 2vh;
+    min-height: 24px;
+    max-height: 24px;
     
     padding: 0;
     border: 0;
     background: none;
     box-shadow: none;
     border-radius: 0px;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+}
+
+.state-display {
+    min-height: 32px;
+    max-height: 32px;
+
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
 }

@@ -12,9 +12,10 @@ import Six from "../../assets/Tile6.png";
 import Seven from "../../assets/Tile7.png";
 import Eigth from "../../assets/Tile8.png";
 
-import { type NodeStateType, FieldNode } from "../../game/node.ts"
+import { type NodeStateType, NodeState, FieldNode } from "../../game/node.ts"
 import { Vector2 } from "../../utils/vector2.ts";
 import type { MouseEvent } from "react";
+import { useState } from 'react';
 
 type Props = {
     node: FieldNode
@@ -39,7 +40,16 @@ const stateImgs = new Map<NodeStateType, string>([
 ]);
 
 export const NodeDisplay = ({node, handleClick, handleFlag}: Props) => {
-    const url = stateImgs.get(node.getState());
+    const [isPressing, setIsPressing] = useState(false);
+
+    const handleMouseEvent = (e: React.MouseEvent, bool: boolean) => {if (e.button === 0 && !node.flagged) setIsPressing(bool)}
+
+    const nodeState = node.getState();
+    const isHidden = node.hidden
+    const src =
+    isPressing && isHidden
+      ? stateImgs.get(NodeState.Zero)
+      : stateImgs.get(nodeState);
 
     return(
         <img 
@@ -49,8 +59,11 @@ export const NodeDisplay = ({node, handleClick, handleFlag}: Props) => {
                 e.preventDefault();
                 handleFlag(node.pos);
             }}
-            src={url}
+            src={src}
             draggable="false"
+            onMouseDown={(e: React.MouseEvent) => handleMouseEvent(e, true)}
+            onMouseUp={(e: React.MouseEvent) => handleMouseEvent(e, false)}
+            onMouseLeave={(e: React.MouseEvent) => handleMouseEvent(e, false)}
         />
     );
 }

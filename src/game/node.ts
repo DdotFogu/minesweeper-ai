@@ -40,17 +40,9 @@ export class FieldNode {
         return newBomb;
     }
 
-    reveal(): boolean{
-        this.hidden = false;
+    reveal() { this.hidden = false }
 
-        return true;
-    }
-
-    toggleFlagged(): boolean{
-        this.flagged = !this.flagged;
-
-        return false;
-    }
+    toggleFlagged(){ this.flagged = !this.flagged }
 
     getState(): NodeStateType{
         return this.flagged 
@@ -80,17 +72,10 @@ export class BombNode extends FieldNode {
         return newBomb;
     }
 
-    reveal(): boolean{
+    reveal() {
         super.reveal();
 
         this.tripped = true
-        return false;
-    }
-
-    toggleFlagged(): boolean{
-        super.toggleFlagged();
-        
-        return true;
     }
 
     getState(): NodeStateType{
@@ -119,12 +104,6 @@ export class EmptyNode extends FieldNode {
         newBomb.flagged = this.flagged;
         newBomb.tag = this.tag;
         return newBomb;
-    }
-
-    reveal(): boolean{
-        super.reveal();
-
-        return true;
     }
 
     getState(): NodeStateType{

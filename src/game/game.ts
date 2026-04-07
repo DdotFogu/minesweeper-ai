@@ -1,8 +1,8 @@
 import { Field, type FloodDiagnostic } from "./field";
 import { Vector2 } from "../utils/vector2";
-import { FieldNode } from "./node";
+import { FieldNode, BombNode } from "./node";
 
-// some improvements can be made
+// make first click always safe. done by creating the field after click
 
 export class Game {
     public field: Field;
@@ -14,7 +14,7 @@ export class Game {
     constructor(settings: GameSettings) {
         this.gameSettings = settings;
 
-        this.field = new Field(this.gameSettings.size, this.gameSettings.mineCount);
+        this.field = new Field(settings);
         this.gameState = GameState.Ongoing;
         this.revealedNodes = [];
     }
@@ -24,16 +24,13 @@ export class Game {
         gameCopy.field = this.field.copy();
         gameCopy.gameState = this.gameState;
         gameCopy.revealedNodes = [...this.revealedNodes];
-        gameCopy.gameSettings = this.gameSettings;
+        gameCopy.gameSettings = this.gameSettings.copy();
         return gameCopy;
     }
-
+    
     flagNode(pos: Vector2): Game {
-        if(!this.gameRunning()) return this.copy();
-
         const newGame = this.copy();
-        const node: FieldNode = newGame.field.getNode(pos);
-        if (!node.hidden) return this.copy();
+        const node: FieldNode = newGame.getNode(pos);
 
         node.toggleFlagged();
 
@@ -41,48 +38,41 @@ export class Game {
 
         return newGame;
     }
-
+    
     revealNode(pos: Vector2): Game {
-        if(!this.gameRunning()) return this.copy();
-
         const newGame = this.copy();
-        const node: FieldNode = newGame.field.getNode(pos);
-        if (node.flagged || !node.hidden) return this.copy();
+        const node: FieldNode = newGame.getNode(pos);
 
-        const {success, nodes}: FloodDiagnostic = newGame.field.flood(node);
-        newGame.revealedNodes.push(...nodes);
+        if (node instanceof BombNode) {
+            node.reveal();
+            newGame.setGameState(GameState.Fail);
+        } else {
+            const { nodes }: FloodDiagnostic = newGame.field.flood(node);
+            newGame.revealedNodes.push(...nodes);
 
-        if (success === false) { newGame.setGameState(GameState.Fail); }
-        else { if (newGame.isWin()) { newGame.setGameState(GameState.Win) } }
-
-        console.log(`Revealing Node at ${pos.getX()}, ${pos.getY()}. ${success}`)
+            if (newGame.isWin()) newGame.setGameState(GameState.Win);
+        }
 
         return newGame;
     }
 
-    gameRunning(): boolean {
-        return this.gameState === GameState.Ongoing;
-    }
+    getNode(pos: Vector2): FieldNode { return this.field.getNode(pos) }
 
+    nodeIsHidden(pos: Vector2): boolean { return this.getNode(pos).hidden }
+
+    nodeIsFlagged(pos: Vector2): boolean { return this.getNode(pos).flagged }
+
+    isRunning(): boolean { return this.gameState === GameState.Ongoing }
+
+    isWin(): boolean { return this.revealedNodes.length >= this.gameSettings.reqCount }
+
+    getSettings(): GameSettings { return this.gameSettings }
+ 
     setGameState(state: GameState): void {
         this.gameState = state;
 
         if (state === GameState.Fail) { console.log(`You Hit a Mine!`); }
-
         if (state === GameState.Win) { console.log(`You Won!`); }
-    }
-
-    isWin(): boolean {
-        // can prolly store these values privately so I dont have to recalculate each call
-        const nodeCount = this.gameSettings.size.getX() * this.gameSettings.size.getY()
-        const mineCount = this.gameSettings.mineCount;
-        const reqCount = nodeCount - mineCount;
-
-        return this.revealedNodes.length == reqCount;
-    }
-
-    getSettings(): GameSettings {
-        return this.gameSettings;
     }
 }
 
@@ -97,26 +87,36 @@ export type GameState = (typeof GameState)[keyof typeof GameState];
 export class GameSettings {
     public size: Vector2;
     public mineCount: number;
+    public nodeCount: number;
+    public reqCount: number;
 
     constructor(size: Vector2, mineCount: number) {
         this.size = size;
         this.mineCount = mineCount;
+        this.nodeCount = this.size.getX() * this.size.getY()
+        this.reqCount = this.size.getX() * this.size.getY() - mineCount;
+    }
+
+    copy(): GameSettings {
+        const settingsCopy = Object.create(GameSettings.prototype) as GameSettings;
+        settingsCopy.size = this.size;
+        settingsCopy.mineCount = this.mineCount;
+        settingsCopy.nodeCount = this.nodeCount;
+        settingsCopy.reqCount = this.reqCount;
+        return settingsCopy;
     }
 }
 
-// Add a check when the minecount is larger than the acutal size so it doesnt crashes
 export const DifficultySettings = {
     Easy: new GameSettings(new Vector2(9, 9), 10),
     Medium: new GameSettings(new Vector2(16, 16), 40),
-    Hard: new GameSettings(new Vector2(24, 24), 50)
+    Hard: new GameSettings(new Vector2(24, 24), 85)
 } as const;
 
 export type Diffculty = (typeof DifficultySettings)[keyof typeof DifficultySettings];
 
 export function createGame(difficulty: Diffculty = DifficultySettings.Easy): Game {
     const newGame = new Game(difficulty);
-
-    newGame.field.printField();
 
     const difficultyName = Object.keys(DifficultySettings).find(key => DifficultySettings[key as keyof typeof DifficultySettings] === difficulty) || 'Unknown';
     console.log(`Created a New Game of ${difficultyName} Difficulty\nSize: ${difficulty.size.getX()}, ${difficulty.size.getY()}\nMines: ${difficulty.mineCount}\nCount: ${difficulty.size.getX()*difficulty.size.getY()}`);

@@ -1,17 +1,23 @@
 import { FieldNode, EmptyNode, BombNode } from "./node";
+import { type GameSettings } from "./game"
 import { Vector2 } from "../utils/vector2";
 
+export type FloodDiagnostic = {
+    nodes: FieldNode[]
+}
 export class Field {
     public grid: FieldNode[][];
     public size: Vector2;
 
-    constructor(size: Vector2, mineCount: number) {
-        this.grid = this.constructField(size, mineCount);
-        this.size = size;
+    constructor(settings: GameSettings) {
+        this.grid = [];
+        this.size = settings.size;
+
+        this.constructField(settings.size, settings.mineCount)
     }
 
     flood(node: FieldNode): FloodDiagnostic {
-        const diagnostic: FloodDiagnostic = {success: true, nodes: []};
+        const diagnostic: FloodDiagnostic = { nodes: []};
 
         const visited = new Set<FieldNode>();
         const queue: FieldNode[] = [node];
@@ -23,7 +29,7 @@ export class Field {
             visited.add(current);
 
             if (current instanceof EmptyNode && current.flagged == false && current.hidden == true) {
-                diagnostic.success = current.reveal();
+                current.reveal();
                 diagnostic.nodes.push(current);
                 
                 if (current.tag === 0) {
@@ -35,32 +41,25 @@ export class Field {
                         }
                     }
                 }
-            } else if (current instanceof BombNode && current.flagged == false && current.hidden == true) {
-                // can prolly get rid of this else and do it on the action in the gameClass
-                diagnostic.success = current.reveal();
             }
         }
 
         return diagnostic;
     }
 
-    getNode(pos: Vector2){
-        return this.grid[pos.getY()][pos.getX()];
+    getNode(pos: Vector2){ return this.grid[pos.getY()][pos.getX()] }
+
+    constructField(size: Vector2, mineCount: number): void {
+        this.grid = this.generateNodes(size);
+        this.grid = this.generateMines(mineCount);
     }
 
-    constructField(size: Vector2, mineCount: number): FieldNode[][] {
-        const newGrid: FieldNode[][] = [];
-
-        for (let y = 0; y < size.getY(); y++) {
-            const row: FieldNode[] = [];
-
-            for (let x = 0; x < size.getX(); x++) {
-                const newNode: FieldNode = new EmptyNode(new Vector2(x, y), []);
-                row.push(newNode);
-            }
-
-            newGrid.push(row);
-        }
+    generateNodes(size: Vector2): FieldNode[][] {
+        const newGrid: FieldNode[][] = Array.from({ length: size.getY() }, (_, y) =>
+            Array.from({ length: size.getX() }, (_, x) =>
+                new EmptyNode(new Vector2(x, y), []) as FieldNode
+            )
+        );
         
         for (let y = 0; y < newGrid.length; y++) {
             for (let x = 0; x < newGrid[y].length; x++) {
@@ -84,7 +83,14 @@ export class Field {
             }
         }
 
-        while (mineCount > 0) {
+        return newGrid;
+    }
+
+    generateMines(count: number): FieldNode[][] {
+        const newGrid: FieldNode[][] = [...this.grid];
+        count = ((t) => t < count ? Math.round(t * 0.15) : count)(this.size.getX() * this.size.getY());
+
+        while (count > 0) {
             const rndRow = Math.floor(Math.random() * newGrid.length);
             const rndNode = Math.floor(Math.random() * newGrid[rndRow].length);
 
@@ -94,16 +100,11 @@ export class Field {
                 
                 for (const neighbor of newBomb.neighbors) {if (neighbor instanceof EmptyNode) (neighbor as EmptyNode).tag++;}
 
-                mineCount--;
+                count--;
             }
         }
 
         return newGrid;
-    }
-
-    printField(){
-        const fieldString = this.grid.map(row => row.map((node) => node.flagged ? ` 🚩 ` : node.hidden ? `[  ]` : node instanceof BombNode ? ` 💣 ` : `[ ${(node as EmptyNode).tag} ]`).join("")).join("\n \n");
-        console.log(fieldString);
     }
 
     copy(): Field {
@@ -139,9 +140,4 @@ export class Field {
 
         return newField;
     }
-}
-
-export type FloodDiagnostic = {
-    success: boolean,
-    nodes: FieldNode[]
 }

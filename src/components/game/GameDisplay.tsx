@@ -7,9 +7,11 @@ import { StateDisplay } from "./StateDisplay";
 
 export const GameDisplay = () => {
     const [game, setGame] = useState<Game>(createGame(DifficultySettings.Easy));
+
+    const canAction = (): boolean => { return game.isRunning() }
     
-    const handleNodeClick = (pos: Vector2) => setGame(prevGame => prevGame.revealNode(pos));
-    const handleNodeFlag = (pos: Vector2) => setGame(prevGame => prevGame.flagNode(pos));
+    const handleNodeClick = (pos: Vector2) => { if (canAction() && game.nodeIsHidden(pos)) setGame(prevGame => prevGame.revealNode(pos)) }
+    const handleNodeFlag = (pos: Vector2) => { if (canAction() && game.nodeIsHidden(pos)) setGame(prevGame => prevGame.flagNode(pos)) }
 
     const handleDiffcultyClick = (diffculty: Diffculty) => setGame(createGame(diffculty));
 
